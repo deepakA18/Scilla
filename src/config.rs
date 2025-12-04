@@ -12,12 +12,13 @@ pub fn scilla_config_path() -> PathBuf {
 }
 
 pub fn expand_tilde(path: &str) -> PathBuf {
-    // on tomls, the ~ is not automatically expanded, so we need to do it manually
-    if path.starts_with("~/")
+    // On TOMLs, ~ is not expanded, so do it manually
+
+    if let Some(stripped) = path.strip_prefix("~/")
         && let Some(home) = home_dir() {
-            return path.replacen("~", &home.to_string_lossy(), 1).into();
+            return home.join(stripped);
         }
-    path.into()
+    PathBuf::from(path)
 }
 
 fn deserialize_path_with_tilde<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
@@ -40,7 +41,7 @@ pub struct ScillaConfig {
 impl ScillaConfig {
     pub fn load() -> Result<ScillaConfig, ScillaError> {
         let scilla_config_path = scilla_config_path();
-        println!("Config Path Founded! Using {scilla_config_path:?}");
+        println!("Using Scilla config path : {scilla_config_path:?}");
         if !scilla_config_path.exists() {
             return Err(ScillaError::ConfigPathDoesntExists);
         }
